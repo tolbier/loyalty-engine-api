@@ -6,7 +6,8 @@ earn and redeem. The React frontend, `loyalty-engine-web`, is an independent
 application in its own repository.
 
 See [the project brief](docs/CHALLENGE.md) for requirements, constraints, and
-the working agreement. The behavior below describes the intended result. The
+the working agreement, and [the implementation roadmap](docs/REQUIREMENTS.md)
+for the planned steps. The behavior below describes the intended result. The
 repository currently contains only the generated Phoenix umbrella: no health
 endpoint or loyalty domain behavior is implemented yet.
 
