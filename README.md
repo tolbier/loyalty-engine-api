@@ -5,8 +5,10 @@ Phoenix and OTP. Members have wallets, and the system records the points they
 earn and redeem. This repository contains only the HTTP API.
 
 See [the project brief](docs/CHALLENGE.md) for requirements, constraints, and
-the working agreement, and [the implementation roadmap](docs/REQUIREMENTS.md)
-for the planned steps. The behavior below describes the intended result. The
+the working agreement, [the implementation roadmap](docs/REQUIREMENTS.md) for
+the planned steps, [the architecture](docs/ARCHITECTURE.md) for the current and
+planned structure, and [the design decisions](docs/DECISIONS.md) for their
+reasons. The behavior below describes the intended result. The
 repository currently contains only the generated Phoenix umbrella: no health
 endpoint or loyalty domain behavior is implemented yet.
 
@@ -19,7 +21,7 @@ API client -> HTTP JSON -> loyalty_engine_api -> loyalty_engine -> PostgreSQL
 The repository is an Elixir umbrella with a one-way dependency:
 
 - `loyalty_engine_api` is the Phoenix HTTP adapter. It will own routing,
-  controllers, the JSON contract, and CORS.
+  controllers, the JSON:API contract, and CORS.
 - `loyalty_engine` owns the domain, Ecto schemas, repository, and migrations.
   It does not depend on Phoenix or on the API application.
 

@@ -35,7 +35,7 @@ refined before they start.
 
 ### 1. Define the foundation contract
 
-- [ ] **1.1** Create `docs/ARCHITECTURE.md` and `docs/DECISIONS.md`. Review the
+- [x] **1.1** Create `docs/ARCHITECTURE.md` and `docs/DECISIONS.md`. Review the
   project guidance named in section 2.1 of the brief, record which decisions
   apply, and resolve conflicts. Include the brief's two different bootstrap
   descriptions: the umbrella in section 2 and the single application command
@@ -52,7 +52,8 @@ planned behavior as implemented.
 
 - [ ] **2.1** Review the generated umbrella: the one-way dependency, the absence
   of HTML, assets, and LiveView views, the generated defaults to keep or
-  remove, and the installed Elixir, OTP, and Phoenix versions.
+  remove, and the installed Elixir, OTP, and Phoenix versions. Configure the
+  `Boundary` library according to decision D7.
 - [ ] **2.2** Make local configuration environment-driven, including the
   database connection and `.envrc.example`. Review the committed development
   and test secrets, and verify local PostgreSQL with Docker Compose.
