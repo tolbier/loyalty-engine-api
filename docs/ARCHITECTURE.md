@@ -53,6 +53,13 @@ routes. Errors are rendered by the generated `LoyaltyEngineApi.ErrorJSON`, with
 the shape `{"errors": {"detail": "..."}}`. This is not the JSON:API format
 agreed in [D4](DECISIONS.md#d4-follow-jsonapi-and-postpone-openapi).
 
+### Configuration
+
+Development and test hardcode the database connection and do not read the `PG*`
+variables. `PORT` is read in every environment. Production requires
+`DATABASE_URL` and `SECRET_KEY_BASE`. Docker Compose publishes PostgreSQL on
+every interface. CORS is not configured.
+
 ## Planned design
 
 Nothing in this section is implemented yet.
@@ -140,6 +147,29 @@ flowchart LR
 
 The facade has no use case and calls the injected port directly. The target time
 limit of the check is two seconds, including the wait for a connection.
+
+### Environment and CORS
+
+[D9](DECISIONS.md#d9-configure-through-environment-variables-and-restrict-cors)
+defines the variables, their defaults, and the CORS rules.
+
+```mermaid
+flowchart LR
+  Envrc[.envrc, optional] -. loaded by the shell .-> Env[Environment variables]
+  Env --> Config[Application configuration]
+  Env --> Compose[Docker Compose]
+  Defaults[Local defaults] --> Config
+  Config --> Domain[loyalty_engine: Repo]
+  Config --> API[loyalty_engine_api: endpoint and CORS]
+  Compose -->|127.0.0.1 only| DB[(Local PostgreSQL)]
+```
+
+- Local defaults apply when a variable is unset. Production secrets and the
+  database URL have no defaults.
+- Invalid ports or CORS origins stop the application at startup, with an error
+  that names the variable and shows no secrets.
+- CORS belongs to the HTTP adapter and needs no domain port. No origin is
+  allowed unless it is configured.
 
 ### Dependency injection
 

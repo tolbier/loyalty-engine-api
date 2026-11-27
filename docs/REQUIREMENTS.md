@@ -42,7 +42,7 @@ refined before they start.
   in LE-001.
 - [x] **1.2** Decide the health response, its status, and whether liveness and
   readiness are separate.
-- [ ] **1.3** Decide the environment variables, safe local defaults, and the
+- [x] **1.3** Decide the environment variables, safe local defaults, and the
   allowed local CORS origins.
 
 Acceptance: the decisions and their reasons are documented, without presenting

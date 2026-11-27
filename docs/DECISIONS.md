@@ -126,7 +126,6 @@ some of its contracts do not, and several topics belong to later roadmap steps.
 
 | Topic | When it is decided |
 | --- | --- |
-| Environment variables and CORS | Step 1.3 |
 | Identifiers, pagination, and error details | Step 5.1 |
 | Balance, locking, and idempotency | Steps 6.1 to 6.3 |
 | Releases, backups, and recovery | Before deployment |
@@ -134,9 +133,10 @@ some of its contracts do not, and several topics belong to later roadmap steps.
 The guide uses `/health` and `/ready`, while the brief requires
 `GET /api/health`. The brief's path prevails, and D8 decides the rest.
 
-The quality gate is decided in D6. The guide treats `Boundary` as optional and
-uses behaviours only for real boundaries; D7 goes further. D7 also decides who
-owns the transaction behind a persistence port.
+D9 decides environment variables and CORS. The quality gate is decided in D6.
+The guide treats `Boundary` as optional and uses behaviours only for real
+boundaries; D7 goes further. D7 also decides who owns the transaction behind a
+persistence port.
 
 ### Discarded
 
@@ -279,3 +279,77 @@ from `Repo`, and a fake can reproduce the failure.
 - General JSON:API content negotiation, including `406` and `415` responses, is
   decided in step 5.1. Until then, the API does not fully comply with that part
   of the specification.
+
+## D9. Configure through environment variables and restrict CORS
+
+**Context.** The brief asks for environment-driven configuration, safe example
+files, local CORS, and CORS restricted to configured origins outside local
+development. The generated development and test settings hardcode the database
+connection, Docker Compose publishes PostgreSQL on every interface, and there
+is no frontend client planned.
+
+**Decision.**
+
+### Environment variables
+
+| Variable | Environments | When unset |
+| --- | --- | --- |
+| `PGHOST` | Development, test | `localhost` |
+| `PGPORT` | Development, test | `5432` |
+| `PGUSER` | Development, test | `postgres` |
+| `PGPASSWORD` | Development, test | `postgres` |
+| `PORT` | All | `4000` |
+| `CORS_ALLOWED_ORIGINS` | All | No allowed origins |
+| `DATABASE_URL` | Production | Startup fails |
+| `SECRET_KEY_BASE` | Production | Startup fails |
+
+- The other generated variables, `POOL_SIZE`, `ECTO_IPV6`,
+  `DNS_CLUSTER_QUERY`, and `MIX_TEST_PARTITION`, keep their behavior.
+- Database names stay fixed and different for development and test.
+  `MIX_TEST_PARTITION` is still appended to the test database name.
+- `.envrc.example` is committed, and `.envrc` stays ignored. `.envrc` is only
+  needed to override defaults. It can be loaded with `source .envrc` or with
+  `direnv`, which is optional.
+
+### Local safety
+
+- Docker Compose publishes PostgreSQL only on `127.0.0.1`, and uses the same
+  configurable user, password, and port. It only sees variables loaded in the
+  shell that runs it.
+- The development and test `secret_key_base` values stay in the repository.
+  They are for local use only and must never be reused in production.
+
+### CORS
+
+- `CORS_ALLOWED_ORIGINS` is a comma-separated list of exact origins with the
+  form `http(s)://host[:port]`. `*` is not allowed.
+- Tests configure a fixed fictitious origin.
+- Allowed origins may use `GET` and `POST`, send the `Accept` and
+  `Content-Type` headers, and make `OPTIONS` preflight requests.
+- Browser credentials, such as cookies, are not allowed.
+- Step 6.3 decides the idempotency key header, which must then be added to the
+  allowed headers.
+
+### Invalid values
+
+The application does not start if a port is invalid, or if a CORS origin is `*`
+or does not have the expected form. The error names the variable to fix and
+does not show secrets.
+
+**Reason.** Local defaults let the project run without extra setup, while
+variables allow a different environment without editing code. Requiring the
+variables was the alternative: it keeps local values in one place, but adds a
+setup step and CI configuration. An empty origin list grants no browser access
+until a client needs it. Failing at startup reveals a wrong configuration
+early.
+
+**Consequences.**
+
+- A missing or unloaded `.envrc` silently uses the local defaults.
+- Changing the database credentials does not change those of an already
+  initialized PostgreSQL volume. The README must warn about it once the
+  variables are supported.
+- A browser client needs its origin added before it can call the API. CORS does
+  not affect `curl` or server clients, and it is not authentication.
+- Step 2.2 implements the variables and the Docker Compose changes, and step
+  3.2 implements CORS.
