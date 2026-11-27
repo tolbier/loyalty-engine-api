@@ -2,8 +2,7 @@
 
 The backend of Loyalty Engine, a small loyalty-points platform built to learn
 Phoenix and OTP. Members have wallets, and the system records the points they
-earn and redeem. The React frontend, `loyalty-engine-web`, is an independent
-application in its own repository.
+earn and redeem. This repository contains only the HTTP API.
 
 See [the project brief](docs/CHALLENGE.md) for requirements, constraints, and
 the working agreement, and [the implementation roadmap](docs/REQUIREMENTS.md)
@@ -14,7 +13,7 @@ endpoint or loyalty domain behavior is implemented yet.
 ## How it works
 
 ```text
-React app -> HTTP JSON -> loyalty_engine_api -> loyalty_engine -> PostgreSQL
+API client -> HTTP JSON -> loyalty_engine_api -> loyalty_engine -> PostgreSQL
 ```
 
 The repository is an Elixir umbrella with a one-way dependency:
@@ -55,7 +54,7 @@ curl http://localhost:4000/api/health
 In scope: a JSON API for members, wallets, and an immutable history of earn and
 redeem movements, introduced in small increments with test-driven development.
 
-Out of scope: serving the React application, Phoenix LiveView, authentication
+Out of scope: user interfaces, Phoenix LiveView, authentication
 before the core workflow exists, real payments, blockchain, Kubernetes, and
 distributed BEAM clustering.
 

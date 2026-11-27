@@ -6,19 +6,14 @@ Implementation steps remain unchecked until reviewed and verified.
 
 ## Objective
 
-Build a small loyalty-points platform as two independent applications in
-separate Git repositories. Members have wallets, and every successful earn or
-redeem operation creates an immutable transaction.
+Build the API of a small loyalty-points platform. Members have wallets, and
+every successful earn or redeem operation creates an immutable transaction.
 
 ```text
-loyalty-engine-web (React)
+API clients
   -> HTTP REST; later Phoenix Channels
   -> loyalty_engine_api -> loyalty_engine -> PostgreSQL
 ```
-
-This roadmap lives in `loyalty-engine-api` and also tracks the steps done in
-`loyalty-engine-web`. Frontend commits belong to that repository and use the
-same step prefix.
 
 ## Required data and results
 
@@ -35,7 +30,7 @@ same step prefix.
 
 ## Roadmap
 
-Sections 1 to 5 cover Sprint 1. Sections 6 to 9 cover Sprints 2 to 5 and are
+Sections 1 to 4 cover Sprint 1. Sections 5 to 8 cover Sprints 2 to 5 and are
 refined before they start.
 
 ### 1. Define the foundation contract
@@ -74,116 +69,92 @@ run the tests, and start the API. No real credentials are committed.
 Acceptance: the endpoint returns the agreed JSON and status, and only the
 configured origins are allowed by CORS.
 
-### 4. Connect the frontend
+### 4. Establish the quality baseline
 
-- [ ] **4.1** Create `loyalty-engine-web` as its own Git repository with React,
-  TypeScript, and Vite, and record the installed Node.js and React versions.
-- [ ] **4.2** Add the API base URL as environment configuration with a safe
-  example file.
-- [ ] **4.3** Show API connectivity with loading, success, and error states,
-  covered by a component or integration test.
+- [ ] **4.1** Complete the setup, formatter, and test documentation, review the
+  `.gitignore` files, and add a minimal CI workflow.
 
-Acceptance: both applications start independently, and the page reports whether
-the API is reachable. The parent directory is not a Git repository.
+Acceptance: the checks pass locally and in CI, and the README explains
+prerequisites, configuration, and startup.
 
-### 5. Establish the quality baseline
+### 5. Add members and wallets
 
-- [ ] **5.1** Complete the backend setup, formatter, and test documentation,
-  review its `.gitignore` files, and add a minimal CI workflow.
-- [ ] **5.2** Document frontend setup, lint, test, and build commands, review
-  its `.gitignore`, and add a minimal CI workflow.
-
-Acceptance: each repository's checks pass locally and in its own CI, and its
-README explains prerequisites, configuration, and startup.
-
-### 6. Add members and wallets
-
-- [ ] **6.1** Decide the Member and Wallet fields, constraints, response shapes,
+- [ ] **5.1** Decide the Member and Wallet fields, constraints, response shapes,
   errors, and pagination. Start `docs/DATA_MODEL.md`.
-- [ ] **6.2** Create members with their wallets in the domain, with migrations,
+- [ ] **5.2** Create members with their wallets in the domain, with migrations,
   constraints, and tests.
-- [ ] **6.3** Query members and wallets through the domain's public API.
-- [ ] **6.4** Expose member creation, listing, details, and wallet endpoints
+- [ ] **5.3** Query members and wallets through the domain's public API.
+- [ ] **5.4** Expose member creation, listing, details, and wallet endpoints
   with API integration tests.
-- [ ] **6.5** Add the React member list and creation form, with tests.
 
-Acceptance: a member created from React is persisted with a wallet and listed.
-Invalid input gets a predictable error.
+Acceptance: a member created through the API is persisted with a wallet and
+listed. Invalid input gets a predictable error.
 
-### 7. Build the points ledger
+### 6. Build the points ledger
 
-- [ ] **7.1** Decide the balance strategy: derived from the ledger or a
+- [ ] **6.1** Decide the balance strategy: derived from the ledger or a
   transactional projection.
-- [ ] **7.2** Decide the concurrency and locking strategy.
-- [ ] **7.3** Decide the idempotency-key scope, retention, and
+- [ ] **6.2** Decide the concurrency and locking strategy.
+- [ ] **6.3** Decide the idempotency-key scope, retention, and
   duplicate-response semantics.
-- [ ] **7.4** Model immutable transactions and their database constraints.
-- [ ] **7.5** Implement atomic, idempotent earn operations.
-- [ ] **7.6** Implement atomic, idempotent redemptions that reject insufficient
+- [ ] **6.4** Model immutable transactions and their database constraints.
+- [ ] **6.5** Implement atomic, idempotent earn operations.
+- [ ] **6.6** Implement atomic, idempotent redemptions that reject insufficient
   balance.
-- [ ] **7.7** Verify retries, partial failures, and concurrent redemptions
+- [ ] **6.7** Verify retries, partial failures, and concurrent redemptions
   against PostgreSQL.
-- [ ] **7.8** Expose earn, redeem, and transaction history endpoints with API
+- [ ] **6.8** Expose earn, redeem, and transaction history endpoints with API
   integration tests.
-- [ ] **7.9** Add the React member details, transaction history, and
-  transaction form views, with tests.
-- [ ] **7.10** Add the React dashboard of members and points activity, defining
-  any endpoint it needs first.
 
-Acceptance: all initial business rules in section 4 of the brief are verified,
-and the UI shows success only after the backend confirms it.
+Acceptance: all initial business rules in section 4 of the brief are verified
+through the domain and the API.
 
-### 8. Introduce OTP for a concrete workflow
+### 7. Introduce OTP for a concrete workflow
 
-- [ ] **8.1** Choose an asynchronous workflow and decide its failure and retry
+- [ ] **7.1** Choose an asynchronous workflow and decide its failure and retry
   behavior, including whether durable jobs are warranted.
-- [ ] **8.2** Implement it under supervision, keeping durable state in
+- [ ] **7.2** Implement it under supervision, keeping durable state in
   PostgreSQL.
-- [ ] **8.3** Verify process lifecycle and failure scenarios.
+- [ ] **7.3** Verify process lifecycle and failure scenarios.
 
 Acceptance: the chosen mechanism is justified by the workflow, and its failure
 behavior is tested and documented.
 
-### 9. Add real-time updates
+### 8. Add real-time updates
 
-- [ ] **9.1** Decide topics, event payloads, subscription access, and how a
+- [ ] **8.1** Decide topics, event payloads, subscription access, and how a
   client recovers state after reconnecting.
-- [ ] **9.2** Publish events only after successful database commits.
-- [ ] **9.3** Expose the events through Phoenix Channels, with tests.
-- [ ] **9.4** Subscribe from React and update the UI, testing disconnect and
-  reconnect behavior.
+- [ ] **8.2** Publish events only after successful database commits.
+- [ ] **8.3** Expose the events through Phoenix Channels, testing subscription,
+  payloads, and disconnect and reconnect behavior.
 
-Acceptance: a confirmed movement appears in React without a page refresh, and
-a failed operation publishes nothing.
+Acceptance: a subscribed client receives a confirmed movement, and a failed
+operation publishes nothing.
 
 ## Acceptance checklist
 
 This checklist covers Sprint 1. Later sprints use their section acceptance.
 
-- [ ] A local parent directory exists and is not a Git repository.
-- [ ] `loyalty-engine-api` and `loyalty-engine-web` are separate repositories.
-- [ ] Phoenix is API-only, and React uses TypeScript and Vite.
-- [ ] Each repository has its own README and dependency management.
+- [ ] `loyalty-engine-api` is its own Git repository.
+- [ ] Phoenix is API-only.
+- [ ] The repository has its own README and dependency management.
 - [ ] PostgreSQL starts locally with Docker Compose.
-- [ ] Both applications start independently with environment-driven
-  configuration, and no secrets or real credentials are committed.
+- [ ] The API starts with environment-driven configuration, and no secrets or
+  real credentials are committed.
 - [ ] `GET /api/health` returns tested JSON with a success status and exposes no
   internal information.
 - [ ] Liveness and readiness are documented if both are implemented.
-- [ ] The React page calls the health endpoint using a configured base URL, not
-  a hard-coded production URL.
-- [ ] Loading, success, and error states are visible and tested.
-- [ ] Quality commands are documented, minimal CI runs them in each repository,
-  and `.gitignore` files exclude dependencies, build output, and secrets.
+- [ ] Quality commands are documented, minimal CI runs them, and `.gitignore`
+  files exclude dependencies, build output, and secrets.
 - [ ] The implementation and its trade-offs can be explained.
 
 ## Verification guidance
 
 Use test-driven development for each meaningful behavior: see the test fail for
 the intended reason, implement the smallest change, then refactor. Test business
-rules in the domain, persistence and concurrency against PostgreSQL, HTTP
-contracts through the API, and visible behavior with React component tests.
-End-to-end tests are optional until the user journeys justify them.
+rules in the domain, persistence and concurrency against PostgreSQL, and HTTP
+contracts through the API. End-to-end tests are optional until the user journeys
+justify them.
 
 Prefix new test names and roadmap commit subjects with the corresponding
 `[RM_X_Y]` step identifier, following the project instructions in
@@ -197,4 +168,4 @@ checking current provider pricing and limits. Before public write access,
 address authentication, demo isolation, rate limiting, and abuse prevention.
 
 Do not add Kubernetes, distributed clustering, an event-sourcing framework,
-GenServers for ordinary CRUD, Redux, real payments, or blockchain features.
+GenServers for ordinary CRUD, real payments, or blockchain features.

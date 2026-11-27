@@ -1,4 +1,4 @@
-# Loyalty Engine
+# Loyalty Engine API
 
 ## Project Brief & Working Agreement
 
@@ -6,8 +6,7 @@
 **Status:** Project foundation / Sprint 1\
 **Purpose:** Technical learning project and public portfolio
 application\
-**Primary technologies:** Elixir, Phoenix, OTP, React, TypeScript,
-PostgreSQL
+**Primary technologies:** Elixir, Phoenix, OTP, PostgreSQL
 
 ------------------------------------------------------------------------
 
@@ -15,8 +14,8 @@ PostgreSQL
 
 Loyalty Engine is a small, progressively extensible loyalty-points
 platform. Members have wallets containing points. The system records
-point movements (earning and redemption), exposes them through an HTTP
-API, and presents them in an independent React application.
+point movements (earning and redemption) and exposes them through an HTTP
+API. This brief covers that backend API.
 
 The project has two equally important goals:
 
@@ -24,7 +23,7 @@ The project has two equally important goals:
    can eventually be deployed publicly and demonstrated to recruiters
    or engineering interviewers.
 2. **Learn through implementation:** deepen practical knowledge of
-   Phoenix, OTP and React by building a system whose architecture and
+   Phoenix and OTP by building a system whose architecture and
    requirements can evolve over time.
 
 This is not intended to be a tutorial CRUD application. The work should
@@ -36,24 +35,10 @@ appropriate to each stage.
 The initial product is deliberately small. Complexity should be
 introduced only when a requirement justifies it.
 
-## 2. Explicit architectural decision: two independent applications
+## 2. Explicit architectural decision: an independent API
 
-The backend and frontend must be **two fully independent applications in
-two separate Git repositories**.
-
-They must not be implemented as a monorepo, nor as two applications
-sharing one build, dependency graph, release process or deployment
-pipeline.
-
-Suggested local workspace:
-
-``` text
-loyalty-engine/                 # Local parent directory only; not a Git repository
-├── loyalty-engine-api/         # Independent Git repository
-└── loyalty-engine-web/         # Independent Git repository
-```
-
-Each application owns its:
+The backend, `loyalty-engine-api`, is a **fully independent application
+in its own Git repository**. It owns its:
 
 - Git repository and history
 - dependencies and lockfiles
@@ -63,16 +48,14 @@ Each application owns its:
 - build and release process
 - deployment configuration and lifecycle
 
-The applications communicate through explicit network contracts:
+Clients communicate with it through explicit network contracts:
 
 - HTTP REST for request/response operations.
 - Phoenix Channels over WebSockets for real-time updates when that
   phase is reached.
 
-The frontend must not import backend code or depend on backend
-internals. The backend must not contain or serve the React application.
-Phoenix LiveView is not part of this learning project: React is the
-independent frontend.
+Clients must not depend on backend internals. The backend serves no user
+interface, and Phoenix LiveView is not part of this learning project.
 
 ### Backend internal structure
 
@@ -97,13 +80,8 @@ and HTTP integration tests. It depends on `loyalty_engine` and calls its
 public context APIs; the domain application must not depend on the API
 application.
 
-The umbrella is an internal structure of the backend repository. It does
-not combine the backend and React frontend into a monorepo: the two
-repositories retain independent Git histories, dependency graphs, build
-and release pipelines, and deployments. The Phoenix release deployed on
-Fly.io includes the API application and its domain dependency. React
-remains in `loyalty-engine-web` and can be deployed independently as a
-static application.
+The Phoenix release deployed on Fly.io includes the API application and
+its domain dependency.
 
 The backend will be bootstrapped again from a clean umbrella scaffold
 before domain implementation begins. The existing product brief,
@@ -116,7 +94,7 @@ publishing it.
 
 ## 2.1 Architectural decisions and project guidance
 
-The backend and frontend should follow the architectural decisions and
+The backend should follow the architectural decisions and
 engineering principles documented in the existing project at
 `/home/toyos/Projects/Elixir/ctv_os_phoenix_challenge`. In particular, consult
 its `docs/project_guide/` materials for architecture, boundaries, domain
@@ -124,9 +102,9 @@ modeling, interfaces, persistence, testing and quality, clean code, and
 operations; also consult `docs/BOUNDARIES.md` and the relevant domain and
 requirements documents for the project-specific decisions. Apply the decisions
 that fit this project, adapting examples to the loyalty domain and the
-independent backend/frontend repositories defined above. If a decision conflicts
-with this brief or a later approved requirement, record and resolve the conflict
-explicitly before implementation.
+API boundaries defined above. If a decision conflicts with this brief or a
+later approved requirement, record and resolve the conflict explicitly
+before implementation.
 
 ## 3. Learning objectives
 
@@ -162,21 +140,6 @@ the source of truth for wallet balances. Durable business state and
 financial-like invariants belong in PostgreSQL transactions. OTP
 processes should be introduced to solve actual process-lifecycle,
 coordination or asynchronous-work problems.
-
-### React and TypeScript
-
-- Build a standalone React application using TypeScript and Vite.
-- Understand components, props, composition and state.
-- Practise `useState`, `useEffect`, `useContext` and custom hooks.
-- Handle forms, validation, loading states and errors.
-- Consume a separately deployed backend API.
-- Understand asynchronous requests and cache/server state.
-- Add real-time updates through Phoenix Channels.
-- Write component and interaction tests.
-
-Do not introduce Redux at the start. Begin with React's built-in state
-tools and add a state-management library only if the product's needs
-make the trade-off worthwhile.
 
 ### Engineering practices
 
@@ -225,8 +188,8 @@ through a generic update endpoint.
    or inconsistent ledger.
 9. The database is the source of truth for durable wallet and
    transaction state.
-10. All domain rules must be enforced by the backend; frontend
-    validation is for user experience, not security or correctness.
+10. All domain rules must be enforced by the backend; client-side
+    validation does not provide security or correctness.
 
 The exact schema, locking strategy, balance projection strategy and
 idempotency-key constraints are deliberate design topics for
@@ -255,7 +218,7 @@ API conventions to establish as implementation begins:
 - Predictable validation and domain error responses.
 - Pagination for collection endpoints when needed.
 - Explicit idempotency-key handling for points operations.
-- CORS restricted to configured frontend origins outside local
+- CORS restricted to configured client origins outside local
   development.
 - An API contract that can later be documented with OpenAPI.
 
@@ -270,7 +233,7 @@ different meanings.
 
 ## 6. Technology choices
 
-### Backend repository: `loyalty-engine-api`
+### Backend
 
 - Elixir
 - Phoenix 1.8, API-only configuration
@@ -281,28 +244,15 @@ different meanings.
 - Phoenix PubSub and Channels in a later phase
 - Oban only if durable background jobs become useful
 
-### Frontend repository: `loyalty-engine-web`
-
-- React
-- TypeScript
-- Vite
-- React Router when routing is introduced
-- TanStack Query may be introduced for server-state management
-- Vitest
-- React Testing Library
-- A WebSocket/Phoenix Channels client in the real-time phase
-
 ### Infrastructure and delivery
 
 Initial deployment direction:
 
-- **Frontend:** Cloudflare Pages (or another suitable static hosting
-  service).
 - **Backend:** Fly.io, using a Docker image and Phoenix release.
 - **Database:** Neon PostgreSQL initially, or another managed
   PostgreSQL service.
-- **Source control and CI:** separate GitHub repositories and
-  independent GitHub Actions workflows.
+- **Source control and CI:** a GitHub repository with its own GitHub
+  Actions workflow.
 
 The target is a free or very low-cost deployment. Provider pricing, free
 allowances, sleep/scale-to-zero behaviour, resource limits, bandwidth,
@@ -314,24 +264,13 @@ cost.
 A custom domain is optional. Provider subdomains are sufficient for the
 first public demo.
 
-## 7. Frontend product experience
-
-The first useful product experience should contain three main views:
-
-1. **Dashboard:** a concise overview of members and points activity.
-2. **Member details:** member information, wallet balance and
-   transaction history.
-3. **Transaction form:** an interface to earn or redeem points.
-
-The UI should communicate loading, success, validation and server-error
-states clearly. It should not assume that a request succeeded until the
-backend confirms it.
+## 7. Public demo safety
 
 A later public-demo mode may provide sample data and a safe way for
-visitors to try the application. Public demo access must not allow one
-visitor to alter another visitor's data. Authentication, demo isolation,
-rate limiting and abuse prevention must be considered before opening
-write operations to the public.
+visitors to try the API. Public demo access must not allow one visitor
+to alter another visitor's data. Authentication, demo isolation, rate
+limiting and abuse prevention must be considered before opening write
+operations to the public.
 
 ## 8. Incremental roadmap
 
@@ -340,21 +279,18 @@ as implementation reveals better design choices.
 
 ### Sprint 1 --- Foundation
 
-**Goal:** both independent applications run locally; PostgreSQL is
-available; the backend exposes a tested health endpoint; the frontend
-can call it.
+**Goal:** the API runs locally; PostgreSQL is available; the backend
+exposes a tested health endpoint.
 
-- Create two independent Git repositories.
+- Create the backend Git repository.
 - Bootstrap Phoenix API-only backend.
-- Bootstrap React + TypeScript + Vite frontend.
 - Configure PostgreSQL using Docker Compose for local development.
 - Add environment-based configuration and safe example environment
   files.
 - Implement and test `GET /api/health`.
 - Configure local CORS.
-- Add a minimal React screen showing API connectivity.
 - Add initial test and quality commands.
-- Document setup and execution in each repository.
+- Document setup and execution.
 
 ### Sprint 2 --- Domain and persistence
 
@@ -364,7 +300,6 @@ can call it.
 - Add Ecto migrations and constraints.
 - Implement member creation and listing.
 - Add context-level tests and API integration tests.
-- Connect React member list and member creation form.
 
 ### Sprint 3 --- Points ledger
 
@@ -376,7 +311,7 @@ can call it.
 - Guarantee atomic updates.
 - Add idempotency handling.
 - Test failure cases, retries and concurrent operations.
-- Display wallet balance and transaction history in React.
+- Expose wallet balance and transaction history.
 
 ### Sprint 4 --- OTP and asynchronous processing
 
@@ -394,13 +329,13 @@ been used.
 
 ### Sprint 5 --- Real-time updates
 
-**Goal:** reflect completed wallet movements in React without a page
-refresh.
+**Goal:** deliver completed wallet movements to connected clients in
+real time.
 
 - Publish domain-relevant events after successful database commits.
 - Use Phoenix PubSub and Channels.
-- Subscribe the frontend to the relevant wallet or member topic.
-- Update the UI when a confirmed transaction event arrives.
+- Let clients subscribe to the relevant wallet or member topic.
+- Push an event when a transaction is confirmed.
 - Test subscription, event payload and disconnect/reconnect behaviour.
 
 ### Sprint 6 --- Product expansion
@@ -423,36 +358,29 @@ Once the core workflow is stable:
 
 - Build a Phoenix release and Docker image.
 - Deploy the backend to Fly.io.
-- Deploy the React static application to Cloudflare Pages.
 - Provision managed PostgreSQL.
 - Configure secrets and environment variables.
 - Configure CORS, HTTPS and health checks.
 - Run migrations safely.
-- Add independent CI/CD pipelines.
+- Add a CI/CD pipeline.
 - Publish architecture documentation and a demo walkthrough.
 
 ## 9. Sprint 1 --- detailed work plan
 
-### LE-001 --- Bootstrap the two independent applications
+### LE-001 --- Bootstrap the API
 
 **User story:**
 
-As a developer, I want a standalone Phoenix API repository and a
-standalone React frontend repository, so that both applications can be
-developed, tested, versioned and deployed independently.
+As a developer, I want a standalone Phoenix API repository, so that the
+backend can be developed, tested, versioned and deployed independently.
 
 **Acceptance criteria:**
 
-- [ ] A local parent directory exists for convenience; it is not a Git
-  repository.
-- [ ] `loyalty-engine-api` is a separate Git repository.
-- [ ] `loyalty-engine-web` is a separate Git repository.
+- [ ] `loyalty-engine-api` is its own Git repository.
 - [ ] Phoenix is generated as an API-only application.
-- [ ] React is generated with TypeScript and Vite.
-- [ ] Each repository has its own README and dependency management.
-- [ ] PostgreSQL can be started locally using Docker Compose (the
-  Compose file may live in the backend repository).
-- [ ] Backend and frontend can be started independently.
+- [ ] The repository has its own README and dependency management.
+- [ ] PostgreSQL can be started locally using Docker Compose.
+- [ ] The API can be started locally.
 - [ ] Configuration is environment-driven.
 - [ ] No secrets or real credentials are committed.
 - [ ] Basic setup and run commands are documented.
@@ -462,28 +390,21 @@ developed, tested, versioned and deployed independently.
 From a chosen workspace directory:
 
 ``` bash
-mkdir loyalty-engine
-cd loyalty-engine
-
 mix phx.new loyalty-engine-api --no-html --no-assets
-
-npm create vite@latest loyalty-engine-web -- --template react-ts
 ```
 
-Initialise Git independently inside each generated application
-directory. If the Phoenix generator or current tooling creates a Git
-repository automatically, verify its location and do not accidentally
-create a shared parent repository.
+If the Phoenix generator creates a Git repository automatically, verify
+its location.
 
 Exact commands and flags should be checked against the installed Phoenix
-and Node.js tooling versions.
+tooling version.
 
 ### LE-002 --- API health endpoint
 
 **User story:**
 
-As a frontend developer, I want a health endpoint, so that the frontend
-and deployment platform can verify that the backend is responding.
+As an API client developer, I want a health endpoint, so that clients
+and the deployment platform can verify that the backend is responding.
 
 **Acceptance criteria:**
 
@@ -494,31 +415,13 @@ and deployment platform can verify that the backend is responding.
 - [ ] Liveness and readiness semantics are documented if both are
   implemented.
 
-### LE-003 --- Frontend connectivity screen
-
-**User story:**
-
-As a visitor, I want the application to show whether the API is
-reachable, so that I can tell whether the system is available.
-
-**Acceptance criteria:**
-
-- [ ] React renders a minimal application page.
-- [ ] The API base URL comes from frontend environment configuration.
-- [ ] The page calls `GET /api/health`.
-- [ ] Loading, success and error states are visible.
-- [ ] The request is not hard-coded to a production URL.
-- [ ] A component or integration test covers the main states.
-
 ### LE-004 --- Quality and documentation baseline
 
-- [ ] Backend formatter and test commands are documented.
-- [ ] Frontend lint, test and build commands are documented.
-- [ ] A minimal CI workflow runs the relevant checks in each
-  repository.
+- [ ] Formatter and test commands are documented.
+- [ ] A minimal CI workflow runs the relevant checks.
 - [ ] `.gitignore` files exclude generated dependencies, build output
   and local secrets.
-- [ ] Each README explains prerequisites, configuration and local
+- [ ] The README explains prerequisites, configuration and local
   startup.
 
 ## 10. TDD and collaboration agreement
@@ -541,7 +444,6 @@ Testing should be appropriate to the layer:
 - Domain/context tests for business rules.
 - Database-backed tests for persistence and transaction behaviour.
 - API integration tests for HTTP contracts.
-- React component tests for user-visible behaviour.
 - End-to-end tests only when the application has enough user journeys
   to justify them.
 
@@ -561,7 +463,7 @@ partner---not as an automatic code generator.
   AI-assisted code.
 - Do not move to the next task until the current acceptance criteria
   are met or an explicit scope adjustment is agreed.
-- Preserve the independence of the two repositories.
+- Preserve the independence of the API from its clients.
 
 The learner writes and owns the implementation. The assistant helps with
 requirements, test design, review, debugging and architectural
@@ -586,13 +488,11 @@ setup is reproducible from the repository documentation.
 
 Do not implement these prematurely:
 
-- Microservices beyond the two independently deployed frontend/backend
-  applications.
+- Microservices.
 - Kubernetes.
 - Distributed BEAM clustering.
 - A complex event-sourcing framework.
 - GenServers for ordinary database-backed CRUD.
-- Redux or elaborate frontend state architecture.
 - Authentication and complex roles before the core workflow exists.
 - Blockchain or token issuance.
 - Real payment processing.
@@ -608,7 +508,7 @@ systems of qiibee or any other company.
 These decisions should be made deliberately when the relevant
 requirements arrive:
 
-- Exact Elixir, OTP, Phoenix, Node.js and React versions.
+- Exact Elixir, OTP and Phoenix versions.
 - Whether wallet balance is computed from the ledger or maintained as
   a transactional projection.
 - Database locking and concurrency strategy for redemptions.
@@ -622,23 +522,20 @@ requirements arrive:
 - Exact deployment sizing and current provider costs.
 
 Record important architectural choices as short ADRs under
-`docs/architecture/` in the relevant repository, or in a dedicated
+`docs/architecture/` in the repository, or in a dedicated
 documentation location agreed by the project.
 
 ## 14. First action
 
-Start with **LE-001 --- Bootstrap the two independent applications**.
+Start with **LE-001 --- Bootstrap the API**.
 
-Create the two repositories, initialise each application, and provide:
+Create the repository, initialise the application, and provide:
 
-1. The directory tree of each repository.
-2. The generated Phoenix and React versions.
+1. The directory tree of the repository.
+2. The generated Phoenix version.
 3. The relevant configuration files.
-4. The commands used to start each application.
+4. The commands used to start the application.
 5. Any errors or decisions encountered.
-
-The first review should verify that the applications are genuinely
-independent before adding domain functionality.
 
 ------------------------------------------------------------------------
 
