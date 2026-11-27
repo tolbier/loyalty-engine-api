@@ -45,7 +45,7 @@ The server listens on `http://localhost:4000`. The database connection is
 currently set in `config/`; it does not read the variables in `.envrc` yet.
 
 Once the health endpoint is implemented, this request will return a successful
-JSON response:
+JSON:API response when the API can query PostgreSQL:
 
 ```bash
 curl http://localhost:4000/api/health

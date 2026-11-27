@@ -117,12 +117,37 @@ A controller validates the shape of the request, calls a facade, and renders the
 result. The domain returns its own results, without HTTP statuses or JSON:API
 structures.
 
+### Health check
+
+`GET /api/health` reports readiness, with the contract defined in
+[D8](DECISIONS.md#d8-expose-a-single-readiness-health-endpoint). `Health` is an
+operational capability rather than a business context.
+
+```mermaid
+flowchart LR
+  Client[Client or platform] -->|GET /api/health| Controller[HealthController]
+  Controller --> Facade[Health facade]
+  Facade -->|calls through| Port[Database check port]
+  Adapter[PostgreSQL adapter] -. implements .-> Port
+  Adapter -->|SELECT 1| Repo[LoyaltyEngine.Repo]
+  Repo --> DB[(PostgreSQL)]
+```
+
+| Facade result | HTTP response |
+| --- | --- |
+| `:ok` | `200` with a `meta` document |
+| `{:error, :unavailable}` | `503` with an `errors` document |
+
+The facade has no use case and calls the injected port directly. The target time
+limit of the check is two seconds, including the wait for a connection.
+
 ### Dependency injection
 
 Configuration selects the adapter for each port. The facade reads it and passes
 the adapter to the use case as an explicit argument, so a use case never looks
-it up. A test of a use case passes a fake instead. Configuration keys are not
-decided.
+it up. A test of a use case passes a fake instead. The health check has no use
+case, so its facade calls the selected adapter through the port. Configuration
+keys are not decided.
 
 ### Allowed dependencies
 
@@ -136,8 +161,8 @@ appear.
 | Persistence adapter | Its port, domain types, Ecto, `Repo` | HTTP |
 
 A facade is the only part of a context that other code calls. It may refer to
-adapters only to wire them, which configuration does by naming the module. A
-health check that needs the database is not covered yet; step 1.2 decides it.
+adapters only to wire them, which configuration does by naming the module. The
+health check follows the same rules: its controller does not use `Repo`.
 
 ### Testing
 
@@ -145,6 +170,7 @@ health check that needs the database is not covered yet; step 1.2 decides it.
 - Persistence adapters are tested against PostgreSQL. Only these tests can
   verify atomicity, locking, constraints, and idempotency.
 - API integration tests cover the HTTP contract and the complete flow.
+- A fake adapter reproduces the unavailable database for the health check.
 
 ### Invariants
 

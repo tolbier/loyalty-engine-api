@@ -40,7 +40,7 @@ refined before they start.
   apply, and resolve conflicts. Include the brief's two different bootstrap
   descriptions: the umbrella in section 2 and the single application command
   in LE-001.
-- [ ] **1.2** Decide the health response, its status, and whether liveness and
+- [x] **1.2** Decide the health response, its status, and whether liveness and
   readiness are separate.
 - [ ] **1.3** Decide the environment variables, safe local defaults, and the
   allowed local CORS origins.

@@ -78,7 +78,7 @@ simpler and less verbose, but every convention would be a project decision.
   details.
 - The generated error renderer and `:api` pipeline do not follow the
   specification yet and must be adapted.
-- Step 1.2 must define a health response that is a valid JSON:API response.
+- The health response must also be a valid JSON:API document. D8 defines it.
 
 [jsonapi]: https://jsonapi.org/format/
 
@@ -126,14 +126,13 @@ some of its contracts do not, and several topics belong to later roadmap steps.
 
 | Topic | When it is decided |
 | --- | --- |
-| Health response, liveness, and readiness | Step 1.2 |
 | Environment variables and CORS | Step 1.3 |
 | Identifiers, pagination, and error details | Step 5.1 |
 | Balance, locking, and idempotency | Steps 6.1 to 6.3 |
 | Releases, backups, and recovery | Before deployment |
 
 The guide uses `/health` and `/ready`, while the brief requires
-`GET /api/health`. The brief's path prevails, and step 1.2 decides the rest.
+`GET /api/health`. The brief's path prevails, and D8 decides the rest.
 
 The quality gate is decided in D6. The guide treats `Boundary` as optional and
 uses behaviours only for real boundaries; D7 goes further. D7 also decides who
@@ -220,3 +219,63 @@ visible in the contract.
   context limits and who owns that transaction.
 - `Boundary` becomes a new dependency. It does not verify runtime behavior or
   database coupling, so reviews are still needed.
+
+## D8. Expose a single readiness health endpoint
+
+**Context.** The brief requires `GET /api/health` to return a successful JSON
+response when the API is available. It leaves open whether the endpoint checks
+the database, and notes that liveness and readiness have different meanings.
+The reference guide uses separate endpoints for them.
+
+**Decision.** `GET /api/health` is the only health endpoint, and it reports
+readiness: it succeeds only if the API can query PostgreSQL. There is no
+separate liveness endpoint.
+
+| Result | Status | Body |
+| --- | --- | --- |
+| Ready | `200` | `{"meta": {"status": "ok"}}` |
+| Database unavailable | `503` | See the error document below |
+
+```json
+{"errors": [{"status": "503", "code": "service_unavailable"}]}
+```
+
+Both responses use these rules:
+
+- `Content-Type: application/vnd.api+json` and `Cache-Control: no-store`.
+- No version, environment, time, server name, exception message, or connection
+  detail.
+- The endpoint works without an `Accept` header, with `*/*`, and with
+  `application/vnd.api+json`.
+
+The check works as follows:
+
+- The controller calls the public `Health` facade, which uses an outbound port.
+  A PostgreSQL adapter implements the port by running `SELECT 1`, and
+  configuration selects it, as D7 requires.
+- The facade returns a domain result, either `:ok` or
+  `{:error, :unavailable}`, without HTTP details.
+- The facade calls the port directly. This is an exception to the flow in D7,
+  because a use case that only delegates would add nothing.
+- The target time limit is two seconds, including the wait for a database
+  connection. Step 3.1 verifies how to apply it with Ecto.
+
+**Reason.** The project owner wants a single endpoint with readiness semantics.
+A metadata-only document is valid JSON:API, while a resource would need an
+artificial type and identifier. Disabling caches prevents an old response from
+looking like a current check. Going through a port keeps the HTTP adapter away
+from `Repo`, and a fake can reproduce the failure.
+
+**Consequences.**
+
+- A `200` means that the query worked at that moment. It does not prove that
+  migrations are applied or that every operation works.
+- A database outage produces a `503` even though the API is running. A platform
+  should not restart the API because of it. How the deployment platform uses
+  the endpoint must be decided before deployment.
+- Frequent checks query the database and may prevent a provider from suspending
+  it when idle. Review the check frequency and the cost with the provider.
+- The adapter must be tested against PostgreSQL.
+- General JSON:API content negotiation, including `406` and `415` responses, is
+  decided in step 5.1. Until then, the API does not fully comply with that part
+  of the specification.
