@@ -9,7 +9,8 @@ defmodule LoyaltyEngineApi.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.17",
+      elixir: "~> 1.20",
+      compilers: [:boundary] ++ Mix.compilers(),
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -37,11 +38,11 @@ defmodule LoyaltyEngineApi.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:boundary, "~> 0.12.0", runtime: false},
       {:phoenix, "~> 1.8.17"},
       {:phoenix_ecto, "~> 4.5"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 1.0"},
       {:loyalty_engine, in_umbrella: true},
       {:jason, "~> 1.2"},
       {:bandit, "~> 1.5"}

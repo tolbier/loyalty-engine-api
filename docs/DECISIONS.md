@@ -303,8 +303,8 @@ is no frontend client planned.
 | `DATABASE_URL` | Production | Startup fails |
 | `SECRET_KEY_BASE` | Production | Startup fails |
 
-- The other generated variables, `POOL_SIZE`, `ECTO_IPV6`,
-  `DNS_CLUSTER_QUERY`, and `MIX_TEST_PARTITION`, keep their behavior.
+- The other generated variables, `POOL_SIZE`, `ECTO_IPV6`, and
+  `MIX_TEST_PARTITION`, keep their behavior. D10 removes `DNS_CLUSTER_QUERY`.
 - Database names stay fixed and different for development and test.
   `MIX_TEST_PARTITION` is still appended to the test database name.
 - `.envrc.example` is committed, and `.envrc` stays ignored. `.envrc` is only
@@ -353,3 +353,60 @@ early.
   not affect `curl` or server clients, and it is not authentication.
 - Step 2.2 implements the variables and the Docker Compose changes, and step
   3.2 implements CORS.
+
+## D10. Trim the scaffold, pin versions, and set the first boundaries
+
+**Context.** Step 2.1 reviews the generated umbrella. It had no HTML, asset, or
+LiveView dependencies, and the domain did not refer to the API application, but
+it kept browser-oriented settings and features that no requirement needs.
+
+**Decision.**
+
+- Remove the browser leftovers: cookie sessions, `Plug.MethodOverride`, static
+  files, the LiveView signing salt and commented socket, development routes and
+  watchers, the static asset manifest, the HTML controller format, and the
+  `:urlencoded` and `:multipart` parsers.
+- Remove Gettext and its translations.
+- Remove `DNSCluster` and `DNS_CLUSTER_QUERY`.
+- Remove the `Phoenix.Ecto.CheckRepoStatus` development plug.
+- Disable `debug_errors` in development.
+- Keep PubSub, the channel helper, telemetry, and verified routes.
+- Require Elixir `~> 1.20`, and pin Erlang/OTP 29.1.2 and Elixir
+  1.20.5-otp-29 in `.tool-versions`.
+- Replace the generated text of the application READMEs with each
+  application's responsibility and rules. The root README documents how to run
+  the project.
+- Use `Boundary` 0.12.0 with these first boundaries:
+
+| Boundary | `deps` | `exports` |
+| --- | --- | --- |
+| `LoyaltyEngine` | None | None |
+| `LoyaltyEngineApi` | `LoyaltyEngine` | None |
+
+- `LoyaltyEngine.DataCase` is the only exception. As test support, it is a
+  top-level boundary with its checks disabled, because `ConnCase` in the API
+  application reuses its sandbox setup.
+
+**Reason.** The API serves no user interface, has no planned translations
+because errors use stable codes, and clustering is a non-goal. PubSub and
+channels are needed by the real-time step. `CheckRepoStatus` checks the database
+before the router, so it could interfere with the `503` response of D8; this
+case was not reproduced. Exporting nothing prevents the API from using internal
+modules such as `Repo`. The debug page answered a JSON request with a stack
+trace and local paths, so development did not show the error contract that
+clients receive.
+
+**Consequences.**
+
+- Development has no debug error page.
+- Elixir 1.17 to 1.19 are no longer supported.
+- Development no longer warns about a missing database or pending migrations.
+- Cookie sessions, static files, or translations must be added again if a
+  requirement needs them.
+- Each public module of the domain, such as a context facade, must be exported
+  before the API can use it.
+- `Boundary` reports violations as compiler warnings. Only compilation with
+  `--warnings-as-errors` fails because of them, and `mix test` alone does not
+  enforce them. The quality gate of D6 must keep that option.
+- Parsing of `application/vnd.api+json` request bodies must be verified when an
+  endpoint receives them.

@@ -1,18 +1,20 @@
 # LoyaltyEngineApi
 
-To start your Phoenix server:
+The HTTP application of [Loyalty Engine API](../../README.md). It will own
+routing, controllers, the JSON:API representation, and CORS.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server`
+Today it contains only the endpoint, an empty `/api` router scope, the generated
+error renderer, and telemetry. There are no API routes yet.
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+## Rules
 
-Ready to run in production? Please [check our deployment guides](https://phoenix.hexdocs.pm/deployment.html).
+- It depends on `loyalty_engine`, and may use only the modules that the domain
+  exports through its `Boundary` declaration. `Repo` is not one of them.
+- It contains no business rules.
 
-## Learn more
+## Commands
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://phoenix.hexdocs.pm/overview.html
-* Docs: https://phoenix.hexdocs.pm
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+Run the project from the repository root, as described in the
+[root README](../../README.md). The structure is described in
+[the architecture](../../docs/ARCHITECTURE.md), and its reasons in
+[the design decisions](../../docs/DECISIONS.md).

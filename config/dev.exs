@@ -10,21 +10,16 @@ config :loyalty_engine, LoyaltyEngine.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
-# For development, we disable any cache and enable
-# debugging and code reloading.
-#
-# The watchers configuration can be used to run external
-# watchers to your application. For example, we can use it
-# to bundle .js and .css sources.
+# For development, we enable code reloading. Debug error pages stay disabled so
+# errors are rendered as in the other environments.
 config :loyalty_engine_api, LoyaltyEngineApi.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}],
   check_origin: false,
   code_reloader: true,
-  debug_errors: true,
-  secret_key_base: "Db9LYBwm1PZoJ63PGtrCyKWP7j8eLwbETAsHnImocRXKypmC+x3s3D+vbDZ7Rp7z",
-  watchers: []
+  debug_errors: false,
+  secret_key_base: "Db9LYBwm1PZoJ63PGtrCyKWP7j8eLwbETAsHnImocRXKypmC+x3s3D+vbDZ7Rp7z"
 
 # ## SSL Support
 #
@@ -48,9 +43,6 @@ config :loyalty_engine_api, LoyaltyEngineApi.Endpoint,
 # If desired, both `http:` and `https:` keys can be
 # configured to run both http and https servers on
 # different ports.
-
-# Enable dev routes for dashboard and mailbox
-config :loyalty_engine_api, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"

@@ -6,9 +6,11 @@ backend. It separates what exists today from what is planned. See
 
 ## Current state
 
-The repository contains the generated Phoenix umbrella. There are no business
-contexts, Ecto schemas, migrations, or API routes, and the health endpoint is
-not implemented.
+The repository contains the Phoenix umbrella, trimmed from the generated
+scaffold as described in
+[D10](DECISIONS.md#d10-trim-the-scaffold-pin-versions-and-set-the-first-boundaries).
+There are no business contexts, Ecto schemas, migrations, or API routes, and the
+health endpoint is not implemented.
 
 ### Applications
 
@@ -36,7 +38,6 @@ starts `loyalty_engine` before the application that depends on it.
 ```mermaid
 flowchart TB
   DomainSup[LoyaltyEngine.Supervisor] --> Repo[LoyaltyEngine.Repo]
-  DomainSup --> DNS[DNSCluster]
   DomainSup --> PubSub[Phoenix.PubSub]
   ApiSup[LoyaltyEngineApi.Supervisor] --> Telemetry[Telemetry supervisor]
   ApiSup --> Endpoint[LoyaltyEngineApi.Endpoint]
@@ -46,7 +47,28 @@ flowchart TB
 The endpoint is configured to use the PubSub server started by the domain
 application. No application code publishes or subscribes to events.
 
+### Boundaries
+
+`Boundary` runs as a compiler in both applications.
+
+```mermaid
+flowchart LR
+  API[LoyaltyEngineApi boundary] -->|deps| Domain[LoyaltyEngine boundary]
+  ConnCase[ConnCase, test support] -->|sandbox setup| DataCase[DataCase boundary]
+  DataCase -->|checks disabled| Repo[LoyaltyEngine.Repo]
+```
+
+Neither application boundary exports modules, so the API cannot use internal
+modules such as `Repo`. Violations are compiler warnings, which fail the build
+only with `--warnings-as-errors`. A dependency from the domain to the API also
+fails that build, because Elixir cannot find the module. `DataCase` is a
+top-level boundary without checks, compiled only for tests.
+
 ### HTTP behavior
+
+The endpoint parses only JSON request bodies. It has no sessions and serves no
+static files. Debug error pages are disabled in development, so errors use the
+same renderer as in the other environments.
 
 The router defines an `/api` scope with a pipeline that accepts `json`, and no
 routes. Errors are rendered by the generated `LoyaltyEngineApi.ErrorJSON`, with
@@ -55,10 +77,11 @@ agreed in [D4](DECISIONS.md#d4-follow-jsonapi-and-postpone-openapi).
 
 ### Configuration
 
-Development and test hardcode the database connection and do not read the `PG*`
-variables. `PORT` is read in every environment. Production requires
-`DATABASE_URL` and `SECRET_KEY_BASE`. Docker Compose publishes PostgreSQL on
-every interface. CORS is not configured.
+`.tool-versions` pins Erlang/OTP 29.1.2 and Elixir 1.20.5, and both
+applications require Elixir `~> 1.20`. Development and test hardcode the
+database connection and do not read the `PG*` variables. `PORT` is read in every
+environment. Production requires `DATABASE_URL` and `SECRET_KEY_BASE`. Docker
+Compose publishes PostgreSQL on every interface. CORS is not configured.
 
 ## Planned design
 
@@ -181,8 +204,9 @@ keys are not decided.
 
 ### Allowed dependencies
 
-Step 2.1 introduces `Boundary`, and each boundary is declared when its modules
-appear.
+The two application boundaries exist. Boundaries inside the domain are declared
+when their modules appear, and each context facade is then exported to the API.
+The rules between elements of a context are the target of that work.
 
 | From | May use | Must not use |
 | --- | --- | --- |

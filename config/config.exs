@@ -21,12 +21,8 @@ config :loyalty_engine_api,
 config :loyalty_engine_api, LoyaltyEngineApi.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
-  render_errors: [
-    formats: [json: LoyaltyEngineApi.ErrorJSON],
-    layout: false
-  ],
-  pubsub_server: LoyaltyEngine.PubSub,
-  live_view: [signing_salt: "8tPK9zji"]
+  render_errors: [formats: [json: LoyaltyEngineApi.ErrorJSON]],
+  pubsub_server: LoyaltyEngine.PubSub
 
 # Configure Elixir's Logger
 config :logger, :default_formatter,

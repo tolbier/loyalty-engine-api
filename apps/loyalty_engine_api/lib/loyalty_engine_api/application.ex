@@ -6,6 +6,7 @@ defmodule LoyaltyEngineApi.Application do
   use Application
 
   @impl true
+  @spec start(Application.start_type(), term()) :: Supervisor.on_start()
   def start(_type, _args) do
     children = [
       LoyaltyEngineApi.Telemetry,
@@ -24,6 +25,7 @@ defmodule LoyaltyEngineApi.Application do
   # Tell Phoenix to update the endpoint configuration
   # whenever the application is updated.
   @impl true
+  @spec config_change(keyword(), keyword(), [atom()]) :: :ok
   def config_change(changed, _new, removed) do
     LoyaltyEngineApi.Endpoint.config_change(changed, removed)
     :ok

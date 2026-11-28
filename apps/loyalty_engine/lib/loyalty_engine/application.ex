@@ -6,10 +6,10 @@ defmodule LoyaltyEngine.Application do
   use Application
 
   @impl true
+  @spec start(Application.start_type(), term()) :: Supervisor.on_start()
   def start(_type, _args) do
     children = [
       LoyaltyEngine.Repo,
-      {DNSCluster, query: Application.get_env(:loyalty_engine, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: LoyaltyEngine.PubSub}
       # Start a worker by calling: LoyaltyEngine.Worker.start_link(arg)
       # {LoyaltyEngine.Worker, arg}

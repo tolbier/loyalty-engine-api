@@ -14,6 +14,9 @@ defmodule LoyaltyEngine.DataCase do
   this option is not recommended for other databases.
   """
 
+  # Test support only: ConnCase in the API application reuses the sandbox setup,
+  # and this module needs the Repo, so boundary checks are disabled for it.
+  use Boundary, top_level?: true, check: [in: false, out: false]
   use ExUnit.CaseTemplate
 
   using do

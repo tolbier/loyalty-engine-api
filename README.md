@@ -9,7 +9,7 @@ the working agreement, [the implementation roadmap](docs/REQUIREMENTS.md) for
 the planned steps, [the architecture](docs/ARCHITECTURE.md) for the current and
 planned structure, and [the design decisions](docs/DECISIONS.md) for their
 reasons. The behavior below describes the intended result. The
-repository currently contains only the generated Phoenix umbrella: no health
+repository currently contains only the Phoenix umbrella scaffold: no health
 endpoint or loyalty domain behavior is implemented yet.
 
 ## How it works
@@ -20,10 +20,12 @@ API client -> HTTP JSON -> loyalty_engine_api -> loyalty_engine -> PostgreSQL
 
 The repository is an Elixir umbrella with a one-way dependency:
 
-- `loyalty_engine_api` is the Phoenix HTTP adapter. It will own routing,
-  controllers, the JSON:API contract, and CORS.
-- `loyalty_engine` owns the domain, Ecto schemas, repository, and migrations.
-  It does not depend on Phoenix or on the API application.
+- [`loyalty_engine_api`](apps/loyalty_engine_api/README.md) is the Phoenix
+  HTTP adapter. It will own routing, controllers, the JSON:API contract, and
+  CORS.
+- [`loyalty_engine`](apps/loyalty_engine/README.md) owns the domain, Ecto
+  schemas, repository, and migrations. It does not depend on Phoenix or on the
+  API application.
 
 PostgreSQL is the source of truth for wallets and point movements. OTP
 processes and real-time updates are introduced only when a requirement
@@ -31,14 +33,23 @@ justifies them.
 
 ## Run
 
-The scaffold needs Elixir, Docker with Compose, and the external `pgdata`
-volume (create it once with `docker volume create pgdata` if it is missing).
+The scaffold needs Erlang/OTP 29.1.2 and Elixir 1.20.5, pinned in
+`.tool-versions` (`asdf install` installs them with the asdf plugins), Docker
+with Compose, and the external `pgdata` volume (create it once with
+`docker volume create pgdata` if it is missing).
 
 ```bash
 docker compose up -d
 mix setup
 mix test
 mix phx.server
+```
+
+To check compilation warnings, including forbidden dependencies between
+boundaries, run:
+
+```bash
+mix compile --force --warnings-as-errors
 ```
 
 The server listens on `http://localhost:4000`. The database connection is

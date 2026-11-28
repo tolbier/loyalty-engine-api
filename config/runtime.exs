@@ -89,6 +89,4 @@ if config_env() == :prod do
   #       force_ssl: [hsts: true]
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
-
-  config :loyalty_engine, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 end

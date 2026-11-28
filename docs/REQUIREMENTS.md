@@ -50,7 +50,7 @@ planned behavior as implemented.
 
 ### 2. Prepare the backend
 
-- [ ] **2.1** Review the generated umbrella: the one-way dependency, the absence
+- [x] **2.1** Review the generated umbrella: the one-way dependency, the absence
   of HTML, assets, and LiveView views, the generated defaults to keep or
   remove, and the installed Elixir, OTP, and Phoenix versions. Configure the
   `Boundary` library according to decision D7.
